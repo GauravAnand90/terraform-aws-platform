@@ -21,3 +21,7 @@ skip-check:
   # EKS enables all 5 control-plane log types. We ship api, audit and authenticator;
   # controllerManager and scheduler add cost and noise with little troubleshooting value.
   - CKV_AWS_37
+  # RDS cluster covered by an AWS Backup plan. Aurora automated backups give point-in-time
+  # restore (prod: 14 days). Cross-account/cross-region copies via AWS Backup are an
+  # org-level control, managed centrally rather than per workload repo.
+  - CKV2_AWS_8
