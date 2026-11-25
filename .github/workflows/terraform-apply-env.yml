@@ -1,0 +1,50 @@
+name: terraform-apply-env
+
+# Reusable workflow: plan and apply one environment.
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      tf_version:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  apply:
+    name: apply (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    # Binding to a GitHub environment is what lets the job assume the apply role
+    # (the IAM trust policy only accepts ...:environment:<name>) and enforces reviewers on prod.
+    environment: ${{ inputs.environment }}
+    defaults:
+      run:
+        working-directory: envs/${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_APPLY_ROLE_ARN }}
+          aws-region: us-west-2
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ inputs.tf_version }}
+          terraform_wrapper: false
+
+      - name: init
+        run: terraform init -input=false -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}"
+
+      - name: plan
+        env:
+          TF_VAR_eks_admin_principal_arns: ${{ vars.EKS_ADMIN_PRINCIPAL_ARNS || '[]' }}
+        run: terraform plan -input=false -lock-timeout=5m -out=tfplan
+
+      - name: apply
+        run: terraform apply -input=false -lock-timeout=5m tfplan

@@ -1,0 +1,37 @@
+name: terraform-apply
+
+# After merge to main: apply dev automatically, then prod behind a required
+# reviewer on the "prod" GitHub environment.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "modules/**"
+      - "envs/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+# Never run two applies against the same state at once.
+concurrency:
+  group: terraform-apply
+  cancel-in-progress: false
+
+jobs:
+  apply-dev:
+    if: vars.AWS_APPLY_ROLE_ARN != ''
+    uses: ./.github/workflows/terraform-apply-env.yml
+    with:
+      environment: dev
+      tf_version: "~1.13.0"
+    secrets: inherit
+
+  apply-prod:
+    needs: apply-dev
+    uses: ./.github/workflows/terraform-apply-env.yml
+    with:
+      environment: prod
+      tf_version: "~1.13.0"
+    secrets: inherit

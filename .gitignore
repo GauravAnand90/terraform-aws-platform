@@ -1,6 +1,27 @@
+# Terraform
 .terraform/
 *.tfstate
-*.tfstate.backup
-*.log
-terraform.tfvars
+*.tfstate.*
+*.tfplan
+tfplan
+plan.txt
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Keep committed: envs/*/terraform.tfvars (no secrets in them by design)
+# Never commit: *.auto.tfvars with secrets, credentials
+*.secret.tfvars
+
+# Go
+test/vendor/
+
+# Editors / OS
+.idea/
+.vscode/
 .DS_Store
