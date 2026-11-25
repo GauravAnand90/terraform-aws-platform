@@ -1,0 +1,23 @@
+# Checkov runs on every PR and fails the build on any finding not listed here.
+# Every skip is a documented risk decision; review them quarterly.
+directory:
+  - .
+framework:
+  - terraform
+skip-path:
+  - bootstrap # one-time, admin-run; reviewed separately
+compact: true
+quiet: true # print failures only
+skip-check:
+  # CloudWatch log retention >= 1 year. Retention is set per environment
+  # (dev 7d, prod 90d) to control cost; long-term audit copies belong in a central log archive account.
+  - CKV_AWS_338
+  # CloudWatch log groups encrypted with a CMK. AWS-managed encryption is accepted for
+  # flow and control-plane logs; they hold no application data.
+  - CKV_AWS_158
+  # KMS key has an explicit key policy. The default policy (account root + IAM) is used;
+  # access is governed through IAM, which this repo also manages.
+  - CKV2_AWS_64
+  # EKS enables all 5 control-plane log types. We ship api, audit and authenticator;
+  # controllerManager and scheduler add cost and noise with little troubleshooting value.
+  - CKV_AWS_37
